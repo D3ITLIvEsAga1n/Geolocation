@@ -1,0 +1,107 @@
+import os
+import requests
+import ipaddress # Import the ipaddress module
+
+def clear_console():
+    """
+    Clears the console screen.
+    Works on Windows, macOS, and Linux.
+    """
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def display_banner():
+    """Prints the ASCII art banner."""
+    print(r"""
+▄▄▄█████▓ ▒█████   ▒█████   ██▓        ██ ▄█▀ ██▓▄▄▄█████▓
+▓  ██▒ ▓▒▒██▒  ██▒▒██▒  ██▒▓██▒        ██▄█▒ ▓██▒▓  ██▒ ▓▒
+▒ ▓██░ ▒░▒██░  ██▒▒██░  ██▒▒██░       ▓███▄░ ▒██▒▒ ▓██░ ▒░
+░ ▓██▓ ░ ▒██   ██░▒██   ██░▒██░       ▓██ █▄ ░██░░ ▓██▓ ░ 
+  ▒██▒ ░ ░ ████▓▒░░ ████▓▒░░██████▒   ▒██▒ █▄░██░  ▒██▒ ░ 
+  ▒ ░░   ░ ▒░▒░▒░ ░ ▒░▒░▒░ ░ ▒░▓  ░   ▒ ▒▒ ▓▒░▓    ▒ ░░   
+    ░      ░ ▒ ▒░   ░ ▒ ▒░ ░ ░ ▒  ░   ░ ░▒ ▒░ ▒ ░    ░    
+  ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░      ░ ░░ ░  ▒ ░  ░      
+             ░ ░      ░ ░      ░  ░   ░  ░    ░           
+                                                          
+    """)
+    print("Made By D3IT\n") # Added creator credit under the banner
+
+def is_private_ip(ip_address_str):
+    """
+    Checks if an IP address string belongs to a private IP range.
+    """
+    try:
+        ip_obj = ipaddress.ip_address(ip_address_str)
+        return ip_obj.is_private
+    except ValueError:
+        return False # Not a valid IP address
+
+def geolocate_ip(ip_address):
+    """
+    Geolocates a public IP address using a free IP geolocation API.
+    """
+    if is_private_ip(ip_address):
+        print(f"\nInformation for {ip_address}:")
+        print(f"  This is a private IP address. Private IPs are not publicly routable ")
+        print(f"  and do not have a specific global geolocation.")
+        print(f"  They are used within local networks (e.g., 192.168.x.x, 10.x.x.x, 172.16.x.x-172.31.x.x).")
+        return
+
+    try:
+        response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=5) # Added timeout for robustness
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        data = response.json()
+
+        if data and data.get("status") == "success":
+            print(f"\nGeolocation Information for {ip_address}:")
+            print(f"  Country: {data.get('country')}")
+            print(f"  Region: {data.get('regionName')}")
+            print(f"  City: {data.get('city')}")
+            print(f"  ZIP: {data.get('zip')}")
+            print(f"  Latitude: {data.get('lat')}")
+            print(f"  Longitude: {data.get('lon')}")
+            print(f"  Timezone: {data.get('timezone')}")
+            print(f"  ISP: {data.get('isp')}")
+            print(f"  Organization: {data.get('org')}")
+            print(f"  AS: {data.get('as')}")
+        else:
+            print(f"Could not retrieve geolocation information for {ip_address}.")
+            if data and data.get("message"):
+                # The API itself might return a "private range" message
+                if data.get("message") == "private range":
+                    print("  The API recognized this as a private IP range and cannot geolocate it.")
+                else:
+                    print(f"Error message from API: {data.get('message')}")
+    except requests.exceptions.Timeout:
+        print(f"An error occurred: The request to the geolocation API timed out.")
+    except requests.exceptions.ConnectionError:
+        print(f"An error occurred: Could not connect to the geolocation API. Check your internet connection.")
+    except requests.exceptions.HTTPError as e:
+        print(f"An error occurred: HTTP error from API: {e.response.status_code}")
+    except ValueError:
+        print(f"Could not decode JSON response from the API.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+if __name__ == "__main__":
+    clear_console()
+    display_banner() # Display the banner at the start
+
+    while True:
+        ip_to_locate = input("Enter an IP address to geolocate (or 'exit' to quit): ").strip()
+        if ip_to_locate.lower() == 'exit':
+            break
+        
+        clear_console()
+        display_banner() # Redisplay banner after clearing
+
+        # Check if the input is a valid IP address format first
+        try:
+            ipaddress.ip_address(ip_to_locate) # Validate IP format
+            geolocate_ip(ip_to_locate)
+        except ValueError:
+            print(f"\n'{ip_to_locate}' is not a valid IP address format.")
+        
+        print("\nPress Enter to continue...")
+        input() # Wait for user to press Enter before clearing again
+        clear_console()
+        display_banner() # Redisplay banner before the next loop iteration
