@@ -1,0 +1,117 @@
+# -*- coding: utf-8 -*-
+"""
+Copyright © 2025 D3IT. All Rights Reserved.
+
+This software is the proprietary and confidential property of D3IT.
+You may not not use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of this software, and you may not permit persons to
+whom the software is furnished to do so.
+
+Any unauthorized use, reproduction, or distribution of this software,
+or any portion of it, may result in severe civil and criminal penalties,
+and will be prosecuted to the maximum extent possible under the law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT
+WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+"""
+
+import socket
+import requests
+import os
+import sys
+
+def clear_console():
+    """
+    Clears the console screen.
+    Works on Windows, macOS, and Linux.
+    """
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def get_private_ip():
+    """
+    Attempts to get the private (local) IP address of the machine.
+    """
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80)) # Connect to an external host (no data sent)
+        private_ip = s.getsockname()[0]
+        s.close()
+        return private_ip
+    except socket.error as e:
+        return f"Error getting private IP: {e}. Check network connection or firewall."
+    except Exception as e:
+        return f"An unexpected error occurred getting private IP: {e}"
+
+def get_public_ip():
+    """
+    Fetches the public IP address using an external API.
+    """
+    try:
+        response = requests.get("https://icanhazip.com", timeout=5)
+        response.raise_for_status()
+        return response.text.strip()
+    except requests.exceptions.Timeout:
+        return "Error getting public IP: Request timed out. Check your internet connection."
+    except requests.exceptions.ConnectionError:
+        return "Error getting public IP: Could not connect to the IP service. Check your internet connection."
+    except requests.exceptions.HTTPError as e:
+        return f"Error getting public IP: HTTP error {e.response.status_code}."
+    except Exception as e:
+        return f"An unexpected error occurred getting public IP: {e}"
+
+def display_banner():
+    """Prints the ASCII art banner and creator credit."""
+    print(r"""
+▄▄▄█████▓ ▒█████   ▒█████   ██▓        ██ ▄█▀ ██▓▄▄▄█████▓
+▓  ██▒ ▓▒▒██▒  ██▒▒██▒  ██▒▓██▒        ██▄█▒ ▓██▒▓  ██▒ ▓▒
+▒ ▓██░ ▒░▒██░  ██▒▒██░  ██▒▒██░       ▓███▄░ ▒██▒▒ ▓██░ ▒░
+░ ▓██▓ ░ ▒██   ██░▒██   ██░▒██░       ▓██ █▄ ░██░░ ▓██▓ ░ 
+  ▒██▒ ░ ░ ████▓▒░░ ████▓▒░░██████▒   ▒██▒ █▄░██░  ▒██▒ ░ 
+  ▒ ░░   ░ ▒░▒░▒░ ░ ▒░▒░▒░ ░ ▒░▓  ░   ▒ ▒▒ ▓▒░▓    ▒ ░░   
+    ░      ░ ▒ ▒░   ░ ▒ ▒░ ░ ░ ▒  ░   ░ ░▒ ▒░ ▒ ░    ░    
+  ░      ░ ░ ░ ▒  ░ ░ ░ ▒    ░ ░      ░ ░░ ░  ▒ ░  ░      
+             ░ ░      ░ ░      ░  ░   ░  ░    ░           
+                                                          
+    """)
+    print("Made By D3IT\n")
+
+# --- Main execution ---
+if __name__ == "__main__":
+    clear_console()
+    display_banner()
+
+    while True:
+        print("Choose an option:")
+        print("1. Get Public IP Address")
+        print("2. Get Private IP Address")
+        print("3. Exit")
+
+        choice = input("Enter your choice (1, 2, or 3): ").strip()
+
+        clear_console() # Clear after choice for fresh output
+        display_banner() # Redisplay banner
+
+        if choice == '1':
+            print("Fetching Public IP Address...\n")
+            public_ip = get_public_ip()
+            print("---")
+            print("Public IP Address")
+            print(f"{public_ip}")
+            print("---\n")
+        elif choice == '2':
+            print("Fetching Private IP Address...\n")
+            private_ip = get_private_ip()
+            print("---")
+            print("Private IP Address")
+            print(f"{private_ip}")
+            print("---\n")
+        elif choice == '3':
+            print("Exiting...")
+            sys.exit(0)
+        else:
+            print("Invalid choice. Please enter 1, 2, or 3.\n")
+        
+        print("Press Enter to continue or make another choice...")
+        input()
+        clear_console() # Clear before showing options again
+        display_banner() # Redisplay banner before next loop iteration
